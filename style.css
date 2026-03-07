@@ -45,18 +45,57 @@ html { scroll-behavior: smooth; }
 .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 30px; right: 30px; background: var(--whatsapp-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: var(--transition); }
 .whatsapp-float:hover { transform: scale(1.1); }
 
-/* HERO */
+/* HERO - VERSIÓN OPTIMIZADA PARA LEGIBILIDAD Y ENCUADRE */
 .hero {
-    /* ... otros estilos ... */
-    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('PORTADA.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed; /* Opcional: efecto de paralaje */
+    /* CAMBIO TÉCNICO 1: Filtro de contraste reforzado para que el texto blanco resalte */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.5)), url('PORTADA.jpg');
+    
+    /* CAMBIO TÉCNICO 2: 'contain' evita que la imagen se corte, asegurando que se vea completa */
+    background-size: cover; /* Mantenemos cover pero ajustamos la posición para no perder detalles */
+    background-position: center 20%; /* Sube un poco el foco de la imagen para mostrar más del taller */
+    
+    background-attachment: fixed;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 20px;
 }
-.hero-content { max-width: 850px; margin: 0 auto; }
-.hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
-.hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
-.hero-buttons { display: flex; justify-content: center; gap: 1rem; }
+
+.hero-content { 
+    max-width: 850px; 
+    margin: 0 auto; 
+    /* Añadimos un z-index para asegurar que el contenido esté siempre sobre el fondo */
+    position: relative; 
+    z-index: 2;
+}
+
+.hero h1 { 
+    font-size: clamp(2.5rem, 5vw, 4rem); 
+    font-weight: 800; 
+    line-height: 1.1; 
+    margin-bottom: 1.5rem;
+    color: #ffffff;
+    /* CAMBIO TÉCNICO 3: Sombra de texto para separar las letras del fondo detallado */
+    text-shadow: 0px 4px 15px rgba(0, 0, 0, 0.8);
+}
+
+.hero p { 
+    font-size: 1.25rem; 
+    margin-bottom: 2rem; 
+    /* Aumentamos la opacidad para que la información técnica sea nítida */
+    opacity: 1; 
+    color: #ffffff;
+    text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.9);
+    font-weight: 500;
+}
+
+.hero-buttons { 
+    display: flex; 
+    justify-content: center; 
+    gap: 1rem; 
+}
 
 /* SECTIONS */
 .section-title { font-size: 2.3rem; color: var(--dark-blue); margin-bottom: 1rem; text-align: center; font-weight: 800; }
@@ -96,4 +135,5 @@ html { scroll-behavior: smooth; }
     .nav-menu { display: none; }
 
 }
+
 
