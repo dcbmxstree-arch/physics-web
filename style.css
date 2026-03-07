@@ -48,7 +48,7 @@ html { scroll-behavior: smooth; }
 /* HERO */
 .hero {
     /* ... otros estilos ... */
-    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('portada.jpg');
+    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('PORTADA.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Opcional: efecto de paralaje */
@@ -96,3 +96,4 @@ html { scroll-behavior: smooth; }
     .nav-menu { display: none; }
 
 }
+
