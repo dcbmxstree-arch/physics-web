@@ -46,11 +46,12 @@ html { scroll-behavior: smooth; }
 .whatsapp-float:hover { transform: scale(1.1); }
 
 /* HERO */
-.hero { 
-    height: 85vh; 
-    background: linear-gradient(rgba(10,31,68,0.85), rgba(10,31,68,0.85)), url('https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2000'); 
-    background-size: cover; background-position: center;
-    display: flex; align-items: center; color: var(--white); text-align: center;
+.hero {
+    /* ... otros estilos ... */
+    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('portada.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Opcional: efecto de paralaje */
 }
 .hero-content { max-width: 850px; margin: 0 auto; }
 .hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
@@ -93,4 +94,5 @@ html { scroll-behavior: smooth; }
     .hero h1 { font-size: 2.5rem; }
     .hero-buttons { flex-direction: column; }
     .nav-menu { display: none; }
+
 }
