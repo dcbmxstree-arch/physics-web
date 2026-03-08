@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadística Pro | PHYSICS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563EB; --accent: #F59E0B; --bg: #F8FAFC; --border: #E2E8F0; --text: #1E293B; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        
+        /* Navegación */
+        .nav-bar { background: white; border-bottom: 1px solid var(--border); padding: 15px; display: flex; justify-content: center; sticky: top; z-index: 100; }
+        .btn-back { display: flex; align-items: center; gap: 10px; color: #64748B; text-decoration: none; font-weight: 700; padding: 10px 20px; border: 2px solid var(--border); border-radius: 30px; transition: 0.3s; }
+        .btn-back:hover { border-color: var(--primary); color: var(--primary); background: #EFF6FF; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .tab-btn { padding: 12px 24px; border: none; background: #E2E8F0; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748B; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+        .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+        .card { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        
+        /* Inputs */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; color: #64748B; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-family: 'Inter'; }
+        
+        /* Gráfico */
+        .canvas-container { position: relative; background: white; border-radius: 12px; border: 1px solid var(--border); padding: 10px; }
+        canvas { width: 100%; height: 400px; display: block; }
+
+        .result-badge { background: #EEF2FF; color: var(--primary); padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px; border: 1px solid #C7D2FE; }
+        .result-val { font-size: 1.5rem; font-weight: 800; display: block; }
+
+        @media (max-width: 850px) { .main-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<nav class="nav-bar">
+    <a href="index.html" class="btn-back">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Volver a PHYSICS
+    </a>
+</nav>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="setDist('normal')">Normal (Z)</button>
+        <button class="tab-btn" onclick="setDist('t')">t-Student</button>
+        <button class="tab-btn" onclick="setDist('chi')">Chi-Cuadrado (χ²)</button>
+    </div>
+
+    <div class="main-grid">
+        <div class="sidebar">
+            <div class="card">
+                <h3 id="dist-title">Distribución Normal</h3>
+                
+                <div id="params-area">
+                    </div>
+
+                <div class="input-group">
+                    <label>Tipo de Probabilidad</label>
+                    <select id="prob-type" onchange="update()">
+                        <option value="left">Cola Izquierda P(X < x)</option>
+                        <option value="right">Cola Derecha P(X > x)</option>
+                        <option value="both">Dos Colas (Simétrico)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label id="label-val">Valor de x</label>
+                    <input type="number" id="input-x" value="1.96" step="0.01" oninput="update()">
+                </div>
+
+                <div class="result-badge">
+                    <span id="result-label">Probabilidad P</span>
+                    <span class="result-val" id="res-prob">0.9750</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="canvas-container card">
+                <canvas id="statCanvas"></canvas>
+            </div>
+            <div class="card" style="margin-top: 20px; font-size: 0.85rem; color: #475569;">
+                <strong>Nota de Ingeniería:</strong> Los gráficos utilizan integración numérica para el sombreado y la función de densidad de probabilidad (PDF) exacta para cada distribución.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDist = 'normal';
+    const canvas = document.getElementById('statCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function setDist(type) {
+        currentDist = type;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        const params = document.getElementById('params-area');
+        const title = document.getElementById('dist-title');
+        
+        if(type === 'normal') {
+            title.innerText = "Distribución Normal";
+            params.innerHTML = `
+                <div class="input-group"><label>Media (μ)</label><input type="number" id="p1" value="0" oninput="update()"></div>
+                <div class="input-group"><label>Desv. Estándar (σ)</label><input type="number" id="p2" value="1" min="0.1" step="0.1" oninput="update()"></div>
+            `;
+        } else if(type === 't') {
+            title.innerText = "Distribución t-Student";
+            params.innerHTML = `<div class="input-group"><label>Grados de Libertad (df)</label><input type="number" id="p1" value="10" min="1" oninput="update()"></div>`;
+        } else {
+            title.innerText = "Distribución Chi-Cuadrado";
+            params.innerHTML = `<div class="input-group"><label>Grados de Libertad (df)</label><input type="number" id="p1" value="5" min="1" oninput="update()"></div>`;
+            document.getElementById('input-x').value = 11.07;
+        }
+        update();
+    }
+
+    function update() {
+        const x = parseFloat(document.getElementById('input-x').value);
+        const type = document.getElementById('prob-type').value;
+        const p1 = parseFloat(document.getElementById('p1').value);
+        const p2 = document.getElementById('p2') ? parseFloat(document.getElementById('p2').value) : null;
+        
+        let prob = 0;
+        
+        // Cálculos usando jStat
+        if(currentDist === 'normal') {
+            prob = jStat.normal.cdf(x, p1, p2);
+        } else if(currentDist === 't') {
+            prob = jStat.studentt.cdf(x, p1);
+        } else {
+            prob = jStat.chisquare.cdf(x, p1);
+        }
+
+        if(type === 'right') prob = 1 - prob;
+        if(type === 'both') prob = currentDist === 'chi' ? prob : 2 * (1 - Math.abs(jStat.normal.cdf(x, 0, 1))); // Simplificación para Z
+
+        document.getElementById('res-prob').innerText = prob.toFixed(4);
+        draw(x, p1, p2, type);
+    }
+
+    function draw(valX, p1, p2, type) {
+        const w = canvas.width = canvas.offsetWidth * 2;
+        const h = canvas.height = 800;
+        ctx.scale(2, 2);
+        const cw = w/2, ch = h/2;
+        
+        ctx.clearRect(0,0,cw,ch);
+
+        // Configuración de escala
+        let minX = -4, maxX = 4;
+        if(currentDist === 'chi') { minX = 0; maxX = p1 + 15; }
+        if(currentDist === 'normal' && p2 > 1) { minX = p1 - 4*p2; maxX = p1 + 4*p2; }
+
+        const mapX = (x) => 50 + (x - minX) * (cw - 100) / (maxX - minX);
+        const mapY = (y) => ch - 50 - y * (ch - 150) / 0.4; // Escala vertical fija para PDF
+
+        // Función de Densidad (PDF)
+        const pdf = (x) => {
+            if(currentDist === 'normal') return jStat.normal.pdf(x, p1, p2);
+            if(currentDist === 't') return jStat.studentt.pdf(x, p1);
+            if(currentDist === 'chi') return jStat.chisquare.pdf(x, p1);
+        };
+
+        // 1. Dibujar Área Sombreada
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';
+        ctx.beginPath();
+        for(let i = minX; i <= maxX; i += (maxX-minX)/200) {
+            let y = pdf(i);
+            let shouldFill = false;
+            if(type === 'left' && i <= valX) shouldFill = true;
+            if(type === 'right' && i >= valX) shouldFill = true;
+            if(type === 'both' && Math.abs(i) >= Math.abs(valX)) shouldFill = true;
+
+            if(shouldFill) ctx.lineTo(mapX(i), mapY(y));
+            else ctx.lineTo(mapX(i), mapY(0));
+        }
+        ctx.lineTo(mapX(maxX), mapY(0));
+        ctx.lineTo(mapX(minX), mapY(0));
+        ctx.fill();
+
+        // 2. Dibujar Ejes
+        ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(50, mapY(0)); ctx.lineTo(cw-50, mapY(0)); ctx.stroke();
+
+        // 3. Dibujar Curva Principal
+        ctx.strokeStyle = '#2563EB'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        for(let i = minX; i <= maxX; i += (maxX-minX)/200) {
+            ctx.lineTo(mapX(i), mapY(pdf(i)));
+        }
+        ctx.stroke();
+
+        // 4. Indicador de Valor x
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#1E293B';
+        ctx.beginPath(); ctx.moveTo(mapX(valX), mapY(0)); ctx.lineTo(mapX(valX), mapY(pdf(valX))); ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = '#1E293B';
+        ctx.font = "bold 12px Inter";
+        ctx.fillText(`x = ${valX}`, mapX(valX) - 15, mapY(0) + 20);
+    }
+
+    window.onload = () => setDist('normal');
+</script>
+
+</body>
+</html>
