@@ -3,190 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Métodos Numéricos Avanzados | PHYSICS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Laboratorio de Métodos Numéricos | PHYSICS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563EB; --dark: #0F172A; --bg: #F8FAFC; --card: #FFFFFF; --border: #E2E8F0; --text: #334155; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.6; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 30px; }
-        h1 { font-weight: 800; color: var(--dark); margin: 0; }
-        .back-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        :root { --primary: #2563EB; --secondary: #64748B; --bg: #F8FAFC; --card: #FFFFFF; --border: #E2E8F0; --text: #1E293B; --success: #10B981; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); overflow-x: auto; }
-        .tab-btn { padding: 12px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .grid-inputs { display: grid; gap: 10px; margin-bottom: 15px; }
-        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+        header { text-align: center; padding: 40px 0; background: white; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
+        h1 { font-weight: 800; margin: 0; color: #0F172A; letter-spacing: -1px; }
         
-        canvas { background: white; border: 1px solid var(--border); border-radius: 8px; width: 100%; height: 450px; display: block; }
-        .table-wrapper { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; border: 1px solid var(--border); text-align: center; font-size: 0.85rem; }
-        th { background: #F1F5F9; color: var(--dark); }
+        /* Tabs System */
+        .tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 30px; }
+        .tab-btn { padding: 12px 24px; border: none; background: #E2E8F0; cursor: pointer; font-weight: 600; border-radius: 8px; transition: 0.3s; color: var(--secondary); }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
 
-        .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn:hover { background: #1D4ED8; transform: translateY(-1px); }
-        .btn-download { background: #10B981; margin-top: 10px; }
+        .module-content { display: none; animation: fadeIn 0.4s ease; }
+        .module-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .formula { background: #F1F5F9; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 15px 0; border-left: 4px solid var(--primary); }
-        .spline-func { color: var(--text); padding: 10px; border-left: 3px solid var(--primary); background: #fdfdfd; margin-bottom: 10px; font-size: 0.9rem; }
+        .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 10px; font-size: 1.25rem; }
+
+        /* Inputs */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--secondary); }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        .matrix-input-grid { display: grid; gap: 8px; margin-top: 10px; }
+        
+        /* Visuals */
+        canvas { background: #fff; border: 1px solid var(--border); border-radius: 8px; width: 100%; height: 400px; }
+        .table-container { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; font-family: 'Fira Code', monospace; font-size: 0.8rem; }
+        th, td { padding: 10px; border: 1px solid var(--border); text-align: center; }
+        th { background: #F1F5F9; font-weight: 600; }
+
+        .theory-box { background: #F1F5F9; padding: 20px; border-radius: 8px; font-size: 0.9rem; border-left: 4px solid var(--primary); }
+        .alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-top: 10px; display: none; }
+        .alert-warning { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+
+        @media (max-width: 900px) { .layout-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <a href="index.html" class="back-link">← Volver a PHYSICS</a>
+<header>
+    <div class="container">
         <h1>Laboratorio de Métodos Numéricos</h1>
-    </header>
+        <p>Análisis Computacional • PHYSICS</p>
+    </div>
+</header>
 
+<div class="container">
     <div class="tabs">
-        <button class="tab-btn active" onclick="showModule('gs')">Gauss-Seidel</button>
-        <button class="tab-btn" onclick="showModule('tc')">Trazadores Cúbicos</button>
-        <button class="tab-btn" onclick="showModule('nr')">Newton-Raphson</button>
+        <button class="tab-btn active" onclick="switchTab('gs')">Gauss-Seidel</button>
+        <button class="tab-btn" onclick="switchTab('nr')">Newton-Raphson</button>
+        <button class="tab-btn" onclick="switchTab('tc')">Trazadores Cúbicos</button>
     </div>
 
-    <div id="mod-gs" class="module">
-        <div class="card">
-            <h3>Solución de Sistemas Lineales</h3>
-            <p>Este método iterativo es ideal para matrices diagonalmente dominantes.</p>
-            <div class="formula">xᵢ⁽ᵏ⁺¹⁾ = (1/aᵢᵢ) [bᵢ - Σⱼ<ᵢ aᵢⱼxⱼ⁽ᵏ⁺¹⁾ - Σⱼ>ᵢ aᵢⱼxⱼ⁽ᵏ⁾]</div>
-            <div style="margin-bottom:15px; display: flex; gap: 15px; align-items: center;">
-                <label>n:</label>
-                <select id="gs-n" onchange="buildGSInputs()">
-                    <option value="2">2x2</option>
-                    <option value="3" selected>3x3</option>
-                    <option value="4">4x4</option>
-                </select>
-                <label>Tolerancia:</label> <input type="number" id="gs-tol" value="0.0001" step="0.00001">
+    <div id="gs" class="module-content active">
+        <div class="layout-grid">
+            <div class="controls">
+                <div class="card">
+                    <h3>Entrada de Datos (Ax = b)</h3>
+                    <div class="input-group">
+                        <label>Dimensión (n):</label>
+                        <select id="gs-n" onchange="initGS()">
+                            <option value="2">2 x 2</option>
+                            <option value="3">3 x 3</option>
+                            <option value="4">4 x 4</option>
+                        </select>
+                    </div>
+                    <div id="gs-matrix-area"></div>
+                    <div id="gs-diag-alert" class="alert alert-warning">Aviso: La matriz no es diagonalmente dominante. Puede no converger.</div>
+                    <div class="input-group" style="margin-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div><label>Tolerancia:</label><input type="number" id="gs-tol" value="0.000001" step="0.000001"></div>
+                        <div><label>Max Iteraciones:</label><input type="number" id="gs-max" value="50"></div>
+                    </div>
+                    <button class="tab-btn active" style="width:100%; margin-top:10px;" onclick="solveGS()">Resolver Sistema</button>
+                </div>
+                <div class="card">
+                    <h3>Teoría y Fórmulas</h3>
+                    <div class="theory-box">
+                        Es un método iterativo que descompone A en $D - L - U$. La fórmula de actualización para cada componente $x_i$ es:
+                        <p style="text-align:center; font-weight:bold;">$x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j < i} a_{ij}x_j^{(k+1)} - \sum_{j > i} a_{ij}x_j^{(k)} \right)$</p>
+                        Se utiliza el valor más reciente de cada variable tan pronto como se calcula.
+                    </div>
+                </div>
             </div>
-            <div id="gs-matrix-container" class="grid-inputs"></div>
-            <button class="btn" onclick="solveGS()">Ejecutar Iteraciones</button>
-        </div>
-        <div id="gs-results" class="card" style="display:none">
-            <h4>Convergencia del Sistema</h4>
-            <div id="gs-table-output" class="table-wrapper"></div>
+            <div class="results">
+                <div class="card">
+                    <h3>Visualización de Convergencia</h3>
+                    <canvas id="gs-canvas"></canvas>
+                </div>
+                <div class="card">
+                    <h3>Resultados</h3>
+                    <div id="gs-sol-final" style="font-weight:800; color:var(--primary); margin-bottom:10px;"></div>
+                    <div class="table-container" id="gs-table"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="mod-tc" class="module" style="display:none">
-        <div class="card">
-            <h3>Interpolación por Splines Cúbicos</h3>
-            <p>Construye curvas suaves garantizando continuidad en S, S' y S''.</p>
-            <div style="margin-bottom:15px;">
-                <label>Cantidad de Puntos:</label>
-                <input type="number" id="tc-n" value="4" min="3" max="10" onchange="buildTCInputs()">
+    <div id="nr" class="module-content">
+        <div class="layout-grid">
+            <div class="controls">
+                <div class="card">
+                    <h3>Configuración de la Función</h3>
+                    <div class="input-group">
+                        <label>f(x):</label>
+                        <input type="text" id="nr-fx" value="x^3 - 2*x - 5" oninput="updateNRDeriv()">
+                    </div>
+                    <div class="input-group">
+                        <label>Derivada calculada f'(x):</label>
+                        <div id="nr-dfx-display" style="font-family:'Fira Code'; color:var(--primary); font-weight:bold; padding:10px; background:#f1f5f9; border-radius:6px;"></div>
+                    </div>
+                    <div class="input-group" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                        <div><label>x₀:</label><input type="number" id="nr-x0" value="1" step="0.1"></div>
+                        <div><label>Tolerancia:</label><input type="number" id="nr-tol" value="0.000001"></div>
+                        <div><label>Max Iter:</label><input type="number" id="nr-max" value="50"></div>
+                    </div>
+                    <button class="tab-btn active" style="width:100%" onclick="solveNR()">Buscar Raíz</button>
+                </div>
+                <div class="card">
+                    <h3>Interpretación Geométrica</h3>
+                    <div class="theory-box">
+                        Utiliza la recta tangente a la curva en el punto $(x_n, f(x_n))$ para aproximar la raíz.
+                        <p style="text-align:center; font-weight:bold;">$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$</p>
+                        
+                    </div>
+                </div>
             </div>
-            <div id="tc-points-container" class="grid-inputs"></div>
-            <button class="btn" onclick="solveSplines()">Generar Trazadores y Gráfico</button>
-            <button class="btn btn-download" onclick="downloadMatrix()">Descargar Matriz Tridiagonal (.csv)</button>
-        </div>
-        <div id="tc-results" style="display:none">
-            <div class="card"><canvas id="splineCanvas"></canvas></div>
-            <div class="card"><h4>Funciones de los Trazadores</h4><div id="tc-functions"></div></div>
+            <div class="results">
+                <div class="card">
+                    <h3>Gráfico de f(x) y Tangentes</h3>
+                    <canvas id="nr-canvas"></canvas>
+                </div>
+                <div class="card">
+                    <h3>Iteraciones</h3>
+                    <div class="table-container" id="nr-table"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="mod-nr" class="module" style="display:none">
-        <div class="card">
-            <h3>Método de Newton-Raphson</h3>
-            <p>Encuentra raíces de funciones no lineales mediante aproximaciones tangenciales.</p>
-            <div class="formula">xₙ₊₁ = xₙ - f(xₙ) / f'(xₙ)</div>
-            <div class="grid-inputs" style="grid-template-columns: 1fr 1fr;">
-                <div><label>Función f(x):</label><input type="text" id="nr-fx" value="x^2 - 4"></div>
-                <div><label>Derivada f'(x):</label><input type="text" id="nr-dfx" value="2*x"></div>
-                <div><label>Punto Inicial x₀:</label><input type="number" id="nr-x0" value="1"></div>
-                <div><label>Tolerancia:</label><input type="number" id="nr-tol" value="0.0001"></div>
+    <div id="tc" class="module-content">
+        <div class="layout-grid">
+            <div class="controls">
+                <div class="card">
+                    <h3>Puntos de Interpolación</h3>
+                    <div class="input-group">
+                        <label>Número de puntos (n):</label>
+                        <input type="number" id="tc-n" value="4" min="3" max="10" onchange="initTC()">
+                    </div>
+                    <div id="tc-points-area" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+                    <div class="input-group" style="margin-top:15px;">
+                        <label>Condición de Frontera:</label>
+                        <select id="tc-type">
+                            <option value="natural">Natural (S'' = 0)</option>
+                        </select>
+                    </div>
+                    <button class="tab-btn active" style="width:100%" onclick="solveTC()">Generar Curva</button>
+                </div>
+                <div class="card">
+                    <h3>Propiedades de los Splines</h3>
+                    <div class="theory-box">
+                        Un trazador cúbico $S(x)$ es una función polinómica por tramos que satisface:
+                        <ul>
+                            <li>$S(x_i) = y_i$ (Intersección)</li>
+                            <li>$S'_i(x_i) = S'_{i-1}(x_i)$ (Suavidad)</li>
+                            <li>$S''_i(x_i) = S''_{i-1}(x_i)$ (Curvatura continua)</li>
+                        </ul>
+                        
+                    </div>
+                </div>
             </div>
-            <button class="btn" onclick="solveNewton()">Calcular Raíz</button>
-        </div>
-        <div id="nr-results" class="card" style="display:none">
-            <h4>Pasos de la Aproximación</h4>
-            <div id="nr-table-output" class="table-wrapper"></div>
+            <div class="results">
+                <div class="card">
+                    <h3>Gráfico del Trazador</h3>
+                    <canvas id="tc-canvas"></canvas>
+                </div>
+                <div class="card">
+                    <h3>Ecuaciones por Tramo</h3>
+                    <div id="tc-equations" style="font-size:0.85rem;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let currentCSV = "";
-
-    function showModule(m) {
-        document.querySelectorAll('.module').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('mod-' + m).style.display = 'block';
+    // --- GESTIÓN DE PESTAÑAS ---
+    function switchTab(id) {
+        document.querySelectorAll('.module-content').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
         event.currentTarget.classList.add('active');
-        if(m === 'tc') buildTCInputs();
+        if(id === 'gs') initGS();
+        if(id === 'tc') initTC();
+        if(id === 'nr') updateNRDeriv();
     }
 
-    /* --- GAUSS-SEIDEL --- */
-    function buildGSInputs() {
+    // --- MÓDULO GAUSS-SEIDEL ---
+    function initGS() {
         const n = parseInt(document.getElementById('gs-n').value);
-        const container = document.getElementById('gs-matrix-container');
-        container.innerHTML = '';
-        container.style.gridTemplateColumns = `repeat(${n + 1}, 1fr)`;
-        const def = [[4,-1,0],[ -1,4,-1],[0,-1,3]];
-        const defB = [3,2,5];
-        for(let i=0; i<n; i++) {
-            for(let j=0; j<n; j++) {
-                let val = (i < 3 && j < 3) ? def[i][j] : (i===j?4:0);
-                container.innerHTML += `<input type="number" id="gs-a-${i}-${j}" value="${val}">`;
-            }
-            container.innerHTML += `<input type="number" id="gs-b-${i}" value="${defB[i]||5}" style="background:#EFF6FF">`;
-        }
+        const area = document.getElementById('gs-matrix-area');
+        area.innerHTML = `
+            <label>Matriz A | Vector b</label>
+            <div class="matrix-input-grid" style="grid-template-columns: repeat(${n + 1}, 1fr);">
+                ${Array(n).fill().map((_, i) => 
+                    Array(n).fill().map((_, j) => `<input type="number" id="gs-a-${i}-${j}" value="${i===j?4:1}">`).join('') + 
+                    `<input type="number" id="gs-b-${i}" value="${i+5}" style="background:#EFF6FF">`
+                ).join('')}
+            </div>
+            <label style="margin-top:10px;">Aproximación inicial x⁰</label>
+            <div class="matrix-input-grid" style="grid-template-columns: repeat(${n}, 1fr);">
+                ${Array(n).fill().map((_, i) => `<input type="number" id="gs-x0-${i}" value="0">`).join('')}
+            </div>
+        `;
     }
 
     function solveGS() {
         const n = parseInt(document.getElementById('gs-n').value);
         const tol = parseFloat(document.getElementById('gs-tol').value);
-        let A = [], B = [], X = new Array(n).fill(0), prevX = new Array(n).fill(0);
+        const max = parseInt(document.getElementById('gs-max').value);
+        
+        let A = [], b = [], x = [];
         for(let i=0; i<n; i++) {
             A[i] = [];
-            for(let j=0; j<n; j++) A[i][j] = parseFloat(document.getElementById(`gs-a-${i}-${j}`).value) || 0;
-            B[i] = parseFloat(document.getElementById(`gs-b-${i}`).value) || 0;
+            for(let j=0; j<n; j++) A[i][j] = parseFloat(document.getElementById(`gs-a-${i}-${j}`).value);
+            b[i] = parseFloat(document.getElementById(`gs-b-${i}`).value);
+            x[i] = parseFloat(document.getElementById(`gs-x0-${i}`).value);
         }
-        let iter = 0, error = 1, rows = '';
-        while(error > tol && iter < 40) {
+
+        // Validación Diagonal Dominante
+        let isDD = true;
+        for(let i=0; i<n; i++) {
+            let sum = A[i].reduce((s, val, j) => i === j ? s : s + Math.abs(val), 0);
+            if(Math.abs(A[i][i]) <= sum) isDD = false;
+        }
+        document.getElementById('gs-diag-alert').style.display = isDD ? 'none' : 'block';
+
+        let iterations = [], iter = 0, error = 1;
+        while(error > tol && iter < max) {
+            let xOld = [...x];
             for(let i=0; i<n; i++) {
                 let s = 0;
-                for(let j=0; j<n; j++) if(i!==j) s += A[i][j] * X[j];
-                X[i] = (B[i] - s) / A[i][i];
+                for(let j=0; j<n; j++) if(i !== j) s += A[i][j] * x[j];
+                x[i] = (b[i] - s) / A[i][i];
             }
-            error = Math.max(...X.map((v, i) => Math.abs(v - prevX[i])));
-            prevX = [...X]; iter++;
-            rows += `<tr><td>${iter}</td>${X.map(v=>`<td>${v.toFixed(5)}</td>`).join('')}<td>${error.toFixed(6)}</td></tr>`;
+            error = Math.max(...x.map((v, i) => Math.abs(v - xOld[i])));
+            iter++;
+            iterations.push({iter, x: [...x], error});
         }
-        document.getElementById('gs-results').style.display = 'block';
-        document.getElementById('gs-table-output').innerHTML = `<table><thead><tr><th>Iter</th>${X.map((_,i)=>`<th>x${i+1}</th>`).join('')}<th>Error</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+        renderGSTable(iterations);
+        document.getElementById('gs-sol-final').innerText = `Solución: [${x.map(v => v.toFixed(6)).join(', ')}]`;
+        drawGS(A, b, iterations, n);
     }
 
-    /* --- TRAZADORES CÚBICOS --- */
-    function buildTCInputs() {
-        const n = parseInt(document.getElementById('tc-n').value);
-        const container = document.getElementById('tc-points-container');
-        container.innerHTML = '';
-        container.style.gridTemplateColumns = "1fr 1fr";
-        const defX = [0, 1, 2, 3], defY = [1, 2.7, 5.2, 2.1];
-        for(let i=0; i<n; i++) {
-            container.innerHTML += `<input type="number" id="tc-x-${i}" value="${defX[i]||i}" placeholder="x${i}">`;
-            container.innerHTML += `<input type="number" id="tc-y-${i}" value="${defY[i]||i*i}" placeholder="y${i}">`;
-        }
+    function renderGSTable(data) {
+        let html = `<table><tr><th>k</th>${data[0].x.map((_, i) => `<th>x${i+1}</th>`).join('')}<th>Error</th></tr>`;
+        data.forEach(d => {
+            html += `<tr><td>${d.iter}</td>${d.x.map(v => `<td>${v.toFixed(6)}</td>`).join('')}<td>${d.error.toExponential(2)}</td></tr>`;
+        });
+        document.getElementById('gs-table').innerHTML = html + `</table>`;
     }
 
-    function solveSplines() {
-        const nP = parseInt(document.getElementById('tc-n').value);
-        let pts = [];
-        for(let i=0; i<nP; i++) pts.push({x: parseFloat(document.getElementById(`tc-x-${i}`).value), y: parseFloat(document.getElementById(`tc-y-${i}`).value)});
-        pts.sort((a,b)=>a.x - b.x);
+    function drawGS(A, b, path, n) {
+        const canvas = document.getElementById('gs-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,500,400);
         
+        if(n === 2) {
+            // Dibujar rectas para 2x2
+            const scale = 40, offset = 200;
+            ctx.strokeStyle = '#CBD5E1'; ctx.beginPath(); ctx.moveTo(0,200); ctx.lineTo(500,200); ctx.moveTo(250,0); ctx.lineTo(250,400); ctx.stroke();
+            
+            [[0,1],[1,0]].forEach((set, idx) => {
+                ctx.strokeStyle = idx === 0 ? '#2563EB' : '#10B981';
+                ctx.beginPath();
+                for(let x=-10; x<=10; x+=1) {
+                    let y = (b[idx] - A[idx][0]*x)/A[idx][1];
+                    ctx.lineTo(250 + x*scale, 200 - y*scale);
+                }
+                ctx.stroke();
+            });
+        } else {
+            // Gráfico de Error para n > 2
+            ctx.strokeStyle = '#2563EB'; ctx.beginPath();
+            path.forEach((p, i) => {
+                ctx.lineTo(50 + (i*400/path.length), 350 - Math.log10(p.error)*40);
+            });
+            ctx.stroke();
+            ctx.fillText("Log10(Error) vs Iteración", 200, 20);
+        }
+    }
+
+    // --- MÓDULO NEWTON-RAPHSON ---
+    function updateNRDeriv() {
+        try {
+            const expr = document.getElementById('nr-fx').value;
+            const deriv = math.derivative(expr, 'x').toString();
+            document.getElementById('nr-dfx-display').innerText = deriv;
+        } catch(e) { document.getElementById('nr-dfx-display').innerText = "Expresión inválida"; }
+    }
+
+    function solveNR() {
+        const expr = document.getElementById('nr-fx').value;
+        const x0 = parseFloat(document.getElementById('nr-x0').value);
+        const tol = parseFloat(document.getElementById('nr-tol').value);
+        const max = parseInt(document.getElementById('nr-max').value);
+        
+        const f = math.parse(expr).compile();
+        const df = math.derivative(expr, 'x').compile();
+
+        let x = x0, iter = 0, error = 1, data = [];
+        while(error > tol && iter < max) {
+            let fx = f.evaluate({x});
+            let dfx = df.evaluate({x});
+            let xNext = x - fx/dfx;
+            error = Math.abs(xNext - x);
+            data.push({iter: ++iter, x, fx, dfx, error});
+            x = xNext;
+        }
+
+        renderNRTable(data);
+        drawNR(f, x, data);
+    }
+
+    function renderNRTable(data) {
+        let html = `<table><tr><th>k</th><th>xₖ</th><th>f(xₖ)</th><th>Error</th></tr>`;
+        data.forEach(d => {
+            html += `<tr><td>${d.iter}</td><td>${d.x.toFixed(8)}</td><td>${d.fx.toFixed(4)}</td><td>${d.error.toExponential(2)}</td></tr>`;
+        });
+        document.getElementById('nr-table').innerHTML = html + `</table>`;
+    }
+
+    function drawNR(f, root, data) {
+        const canvas = document.getElementById('nr-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 500; canvas.height = 400;
+        ctx.clearRect(0,0,500,400);
+
+        const range = 4, scale = 50;
+        ctx.beginPath(); ctx.strokeStyle = '#334155';
+        for(let x = root-range; x <= root+range; x+=0.1) {
+            let y = f.evaluate({x});
+            ctx.lineTo(250 + (x-root)*scale, 200 - y*scale);
+        }
+        ctx.stroke();
+        
+        // Ejes
+        ctx.strokeStyle = '#E2E8F0'; ctx.beginPath(); ctx.moveTo(0,200); ctx.lineTo(500,200); ctx.stroke();
+        // Raíz
+        ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(250, 200, 5, 0, 7); ctx.fill();
+    }
+
+    // --- MÓDULO TRAZADORES CÚBICOS ---
+    function initTC() {
+        const n = parseInt(document.getElementById('tc-n').value);
+        const area = document.getElementById('tc-points-area');
+        area.innerHTML = '';
+        const def = [[-1, 2], [0, -1], [1, 0], [2, 1], [3, 4], [4, 2]];
+        for(let i=0; i<n; i++) {
+            area.innerHTML += `<div><label>x${i}</label><input type="number" id="tc-x-${i}" value="${def[i]?def[i][0]:i}"></div>`;
+            area.innerHTML += `<div><label>y${i}</label><input type="number" id="tc-y-${i}" value="${def[i]?def[i][1]:i*i}"></div>`;
+        }
+    }
+
+    function solveTC() {
+        const nPoints = parseInt(document.getElementById('tc-n').value);
+        let pts = [];
+        for(let i=0; i<nPoints; i++) {
+            pts.push({x: parseFloat(document.getElementById(`tc-x-${i}`).value), y: parseFloat(document.getElementById(`tc-y-${i}`).value)});
+        }
+        pts.sort((a,b) => a.x - b.x);
+
         const n = pts.length - 1;
-        let h = [], alpha = [], l = [1], mu = [0], z = [0], c = new Array(n+1).fill(0), b = [], d = [], a = pts.map(p=>p.y);
+        let h = [], alpha = [], l = [1], mu = [0], z = [0], c = new Array(n+1).fill(0), b = [], d = [], a = pts.map(p => p.y);
 
         for(let i=0; i<n; i++) h[i] = pts[i+1].x - pts[i].x;
         for(let i=1; i<n; i++) alpha[i] = (3/h[i])*(a[i+1]-a[i]) - (3/h[i-1])*(a[i]-a[i-1]);
+
         for(let i=1; i<n; i++) {
             l[i] = 2*(pts[i+1].x - pts[i-1].x) - h[i-1]*mu[i-1];
             mu[i] = h[i]/l[i];
@@ -199,65 +400,47 @@
             d[j] = (c[j+1]-c[j])/(3*h[j]);
         }
 
-        currentCSV = "Tramo,h,a,b,c,d\n" + a.map((v,i)=>`${i},${h[i]||0},${a[i].toFixed(4)},${(b[i]||0).toFixed(4)},${c[i].toFixed(4)},${(d[i]||0).toFixed(4)}`).join('\n');
-        renderTC(pts, a, b, c, d);
+        drawTC(pts, a, b, c, d);
+        renderTCEq(pts, a, b, c, d);
     }
 
-    function renderTC(pts, a, b, c, d) {
-        document.getElementById('tc-results').style.display = 'block';
-        const canvas = document.getElementById('splineCanvas');
+    function drawTC(pts, a, b, c, d) {
+        const canvas = document.getElementById('tc-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvas.width = 500; canvas.height = 400;
+        ctx.clearRect(0,0,500,400);
 
-        const pad = 50, w = canvas.width - 2*pad, h_cv = canvas.height - 2*pad;
-        const minX = pts[0].x, maxX = pts[pts.length-1].x, minY = Math.min(...pts.map(p=>p.y)), maxY = Math.max(...pts.map(p=>p.y));
-        const rx = (maxX-minX)||1, ry = (maxY-minY)||1;
+        const pad = 40, w = 420, h_cv = 320;
+        const minX = pts[0].x, maxX = pts[pts.length-1].x;
+        const minY = Math.min(...pts.map(p=>p.y)), maxY = Math.max(...pts.map(p=>p.y));
+        const rx = maxX - minX, ry = (maxY - minY) || 1;
 
-        const fList = document.getElementById('tc-functions'); fList.innerHTML = '';
+        ctx.strokeStyle = '#2563EB'; ctx.lineWidth = 2; ctx.beginPath();
         for(let i=0; i<pts.length-1; i++) {
-            fList.innerHTML += `<div class="spline-func"><strong>S${i}(x):</strong> ${d[i].toFixed(3)}(x-${pts[i].x})³ + ${c[i].toFixed(3)}(x-${pts[i].x})² + ${b[i].toFixed(3)}(x-${pts[i].x}) + ${a[i].toFixed(3)}  | x ∈ [${pts[i].x}, ${pts[i+1].x}]</div>`;
-            ctx.beginPath(); ctx.strokeStyle = ['#2563EB','#DC2626','#059669','#D97706'][i%4]; ctx.lineWidth = 3;
             for(let x=pts[i].x; x<=pts[i+1].x; x+=0.05) {
-                let dx = x - pts[i].x, y = d[i]*dx**3 + c[i]*dx**2 + b[i]*dx + a[i];
-                let px = pad + (x-minX)*w/rx, py = canvas.height - pad - (y-minY)*h_cv/ry;
-                if(x===pts[i].x) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+                let dx = x - pts[i].x;
+                let y = a[i] + b[i]*dx + c[i]*dx**2 + d[i]*dx**3;
+                ctx.lineTo(pad + (x-minX)*w/rx, 360 - (y-minY)*h_cv/ry);
             }
-            ctx.stroke();
         }
+        ctx.stroke();
+
         pts.forEach(p => {
-            ctx.fillStyle = '#0F172A'; ctx.beginPath(); ctx.arc(pad+(p.x-minX)*w/rx, canvas.height-pad-(p.y-minY)*h_cv/ry, 6, 0, 7); ctx.fill();
+            ctx.fillStyle = 'red'; ctx.beginPath();
+            ctx.arc(pad + (p.x-minX)*w/rx, 360 - (p.y-minY)*h_cv/ry, 5, 0, 7); ctx.fill();
         });
     }
 
-    function downloadMatrix() {
-        const blob = new Blob([currentCSV], {type:'text/csv'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'matriz_splines.csv'; a.click();
-    }
-
-    /* --- NEWTON-RAPHSON --- */
-    function solveNewton() {
-        const fxStr = document.getElementById('nr-fx').value.replace(/\^/g, '**');
-        const dfxStr = document.getElementById('nr-dfx').value.replace(/\^/g, '**');
-        let x = parseFloat(document.getElementById('nr-x0').value);
-        const tol = parseFloat(document.getElementById('nr-tol').value);
-        
-        const f = (val) => eval(fxStr.replace(/x/g, `(${val})`));
-        const df = (val) => eval(dfxStr.replace(/x/g, `(${val})`));
-
-        let rows = '', iter = 0, error = 1;
-        while(error > tol && iter < 30) {
-            let xNext = x - f(x)/df(x);
-            error = Math.abs(xNext - x);
-            iter++;
-            rows += `<tr><td>${iter}</td><td>${x.toFixed(6)}</td><td>${f(x).toFixed(6)}</td><td>${error.toFixed(6)}</td></tr>`;
-            x = xNext;
+    function renderTCEq(pts, a, b, c, d) {
+        let html = '';
+        for(let i=0; i<pts.length-1; i++) {
+            html += `<div class="spline-func">S${i}(x) = ${a[i].toFixed(3)} + ${b[i].toFixed(3)}(x-${pts[i].x}) + ${c[i].toFixed(3)}(x-${pts[i].x})² + ${d[i].toFixed(3)}(x-${pts[i].x})³</div>`;
         }
-        document.getElementById('nr-results').style.display = 'block';
-        document.getElementById('nr-table-output').innerHTML = `<table><thead><tr><th>n</th><th>xₙ</th><th>f(xₙ)</th><th>Error</th></tr></thead><tbody>${rows}</tbody></table>`;
+        document.getElementById('tc-equations').innerHTML = html;
     }
 
-    window.onload = () => { buildGSInputs(); buildTCInputs(); };
+    window.onload = () => { initGS(); updateNRDeriv(); };
 </script>
+
 </body>
 </html>
