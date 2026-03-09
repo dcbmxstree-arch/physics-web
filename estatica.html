@@ -3,253 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dinámica: Plano Inclinado | PHYSICS</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <title>Simulador de Caída Libre | PHYSICS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Fira+Code&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #f59e0b; --bg: #f8fafc; --dark: #0f172a; --border: #e2e8f0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #1e293b; height: 100vh; display: flex; flex-direction: column; }
+        :root { --primary: #2563eb; --secondary: #dc2626; --bg: #f8fafc; --dark: #0f172a; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        .navbar { background: white; padding: 1rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .btn-back { text-decoration: none; color: #64748b; font-weight: 700; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; transition: 0.3s; }
-        .btn-back:hover { border-color: var(--primary); color: var(--primary); }
+        .header { max-width: 800px; text-align: center; margin-bottom: 20px; }
+        .header h1 { font-weight: 900; margin: 0; }
+        .header p { color: #64748b; font-size: 0.9rem; }
 
-        .main-layout { display: grid; grid-template-columns: 350px 1fr 300px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
-        @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr; overflow: auto; height: auto; } }
+        .canvas-container { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 10px; }
+        canvas { display: block; border-radius: 8px; }
 
-        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .simulator-box { background: #cbd5e1; border-radius: 12px; position: relative; min-height: 400px; display: flex; align-items: center; justify-content: center; }
-        
-        .controls label { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; margin-top: 12px; text-transform: uppercase; }
-        .controls input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--primary); }
-        
-        canvas { width: 100%; height: 100%; border-radius: 12px; }
+        .controls-card {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border);
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;
+            width: 100%; max-width: 800px; margin-top: 20px;
+        }
 
-        .vector-display { font-family: 'Fira Code', monospace; background: var(--dark); color: #fbbf24; padding: 15px; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-run { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; flex: 2; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-reset { background: #64748b; color: white; border: none; padding: 12px; border-radius: 8px; flex: 1; font-weight: 800; cursor: pointer; }
-        .btn-run:hover { background: #d97706; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        input[type="range"] { accent-color: var(--primary); }
+        input[type="number"] { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Fira Code', monospace; }
         
-        .theory-badge { background: #fffbeb; border-left: 4px solid var(--primary); padding: 10px; font-size: 0.75rem; margin-top: 15px; }
+        .btn-reset { background: var(--dark); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-reset:hover { background: #1e293b; }
+        
+        .value-tag { font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-<nav class="navbar">
-    <h2 style="margin:0; font-weight: 900; color: var(--dark);">PHYSICS <span style="color:var(--primary)">DYNAMICS</span></h2>
-    <a href="index.html" class="btn-back">← SALIR</a>
-</nav>
-
-<div class="main-layout">
-    <div class="card controls">
-        <h3 style="margin:0">Configuración</h3>
-        
-        <label>Ángulo (θ): <b id="val_angle">30</b>°</label>
-        <input type="range" id="angle" min="0" max="75" value="30" oninput="resetSim()">
-
-        <label>Masa (m): <b id="val_mass">5</b> kg</label>
-        <input type="range" id="mass" min="1" max="50" value="5" oninput="resetSim()">
-
-        <label>Fricción Estática (μs): <b id="val_us">0.5</b></label>
-        <input type="range" id="us" min="0" max="1" step="0.05" value="0.5" oninput="resetSim()">
-
-        <label>Fricción Cinética (μk): <b id="val_uk">0.3</b></label>
-        <input type="range" id="uk" min="0" max="1" step="0.05" value="0.3" oninput="resetSim()">
-
-        <div class="btn-group">
-            <button class="btn-run" onclick="startSim()">INICIAR</button>
-            <button class="btn-reset" onclick="resetSim()">RESET</button>
-        </div>
-        
-        <div class="theory-badge">
-            <strong>DCL:</strong> Los vectores se calculan respecto al centro de masa del bloque.
-        </div>
+    <div class="header">
+        <h1>PHYSICS <span style="color: var(--primary);">FALL LAB</span></h1>
+        <p>Compara la caída ideal frente a la caída con arrastre lineal. Ajusta la altura de lanzamiento y observa cómo la fricción afecta la velocidad de impacto y los rebotes.</p>
     </div>
 
-    <div class="card simulator-box">
-        <canvas id="simCanvas"></canvas>
+    <div class="canvas-container">
+        <canvas id="simCanvas" width="800" height="400"></canvas>
     </div>
 
-    <div class="card">
-        <h3 style="margin:0">Análisis Vectorial</h3>
-        <div class="vector-display" id="results">-- Esperando --</div>
-        
-        <div style="margin-top:20px; height: 200px;">
-            <canvas id="energyChart"></canvas>
+    <div class="controls-card">
+        <div class="control-group">
+            <label>Altura Inicial (px):</label>
+            <input type="number" id="hInput" value="50" min="20" max="300" onchange="resetSim()">
         </div>
+        <div class="control-group">
+            <label>Restitución (e): <span id="eVal" class="value-tag">0.80</span></label>
+            <input type="range" id="eSlider" min="0" max="1" step="0.01" value="0.8">
+        </div>
+        <div class="control-group">
+            <label>Arrastre (k): <span id="kVal" class="value-tag">0.05</span></label>
+            <input type="range" id="kSlider" min="0" max="0.2" step="0.001" value="0.05">
+        </div>
+        <div class="control-group" style="justify-content: center; flex-direction: row; align-items: center; gap: 10px;">
+            <input type="checkbox" id="pauseCheck"> <label style="margin:0">PAUSAR</label>
+        </div>
+        <button class="btn-reset" onclick="resetSim()">REINICIAR</button>
     </div>
-</div>
 
 <script>
     const canvas = document.getElementById('simCanvas');
     const ctx = canvas.getContext('2d');
-    let animationId;
-    let pos = 0;
-    let vel = 0;
-    let energyChart;
+    
+    // Parámetros Físicos Fijos
+    const g = 0.5;
+    const floorY = 380;
+    const radius = 15;
 
-    const COLORS = {
-        primary: "#f59e0b",
-        dark: "#0f172a",
-        secondary: "#64748b",
-        success: "#10b981",
-        danger: "#ef4444",
-        blue: "#3b82f6"
-    };
+    // Pelotas
+    let ballIdeal = { y: 50, vy: 0, color: '#2563eb', label: 'IDEAL' };
+    let ballDrag = { y: 50, vy: 0, color: '#dc2626', label: 'ARRASTRE' };
 
     function resetSim() {
-        cancelAnimationFrame(animationId);
-        pos = 0;
-        vel = 0;
-        update();
+        const startY = parseInt(document.getElementById('hInput').value);
+        ballIdeal.y = ballDrag.y = startY;
+        ballIdeal.vy = ballDrag.vy = 0;
     }
 
     function update() {
-        const thetaDeg = parseFloat(document.getElementById('angle').value);
-        const m = parseFloat(document.getElementById('mass').value);
-        const us = parseFloat(document.getElementById('us').value);
-        const uk = parseFloat(document.getElementById('uk').value);
-        const g = 9.81;
+        if (document.getElementById('pauseCheck').checked) return;
 
-        document.getElementById('val_angle').innerText = thetaDeg;
-        document.getElementById('val_mass').innerText = m;
-        document.getElementById('val_us').innerText = us;
-        document.getElementById('val_uk').innerText = uk;
-
-        const rad = thetaDeg * (Math.PI / 180);
-        const Wx = m * g * Math.sin(rad);
-        const Wy = m * g * Math.cos(rad);
-        const N = Wy;
-        const fs_max = us * N;
+        const e = parseFloat(document.getElementById('eSlider').value);
+        const k = parseFloat(document.getElementById('kSlider').value);
         
-        let status = "";
-        let accel = 0;
-        let fr_val = 0;
+        document.getElementById('eVal').innerText = e.toFixed(2);
+        document.getElementById('kVal').innerText = k.toFixed(3);
 
-        if (Wx > fs_max) {
-            fr_val = uk * N;
-            accel = (Wx - fr_val) / m;
-            status = "MOVIMIENTO ACELERADO";
-        } else {
-            fr_val = Wx;
-            status = "EQUILIBRIO ESTÁTICO";
-            accel = 0;
+        // Física Ideal
+        ballIdeal.vy += g;
+        ballIdeal.y += ballIdeal.vy;
+        if (ballIdeal.y + radius >= floorY) {
+            ballIdeal.vy = -ballIdeal.vy * e;
+            ballIdeal.y = floorY - radius;
         }
 
-        document.getElementById('results').innerHTML = `
-            <b>ESTADO:</b> ${status}<br>
-            --------------------------<br>
-            Wx (Peso x): ${Wx.toFixed(2)} N<br>
-            Normal (N): ${N.toFixed(2)} N<br>
-            Fricción: ${fr_val.toFixed(2)} N<br>
-            Aceleración: ${accel.toFixed(2)} m/s²
-        `;
-
-        drawScene(rad, pos, Wx, Wy, N, fr_val);
-        updateEnergyChart(m, vel, pos, rad);
-        return accel;
+        // Física con Arrastre (F = mg - kv)
+        let accelDrag = g - (k * ballDrag.vy);
+        ballDrag.vy += accelDrag;
+        ballDrag.y += ballDrag.vy;
+        if (ballDrag.y + radius >= floorY) {
+            ballDrag.vy = -ballDrag.vy * e;
+            ballDrag.y = floorY - radius;
+        }
     }
 
-    function drawVector(x, y, dx, dy, color, label) {
-        if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
-        ctx.strokeStyle = color;
-        ctx.fillStyle = color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + dx, y + dy);
-        ctx.stroke();
-        const angle = Math.atan2(dy, dx);
-        ctx.beginPath();
-        ctx.moveTo(x + dx, y + dy);
-        ctx.lineTo(x + dx - 10 * Math.cos(angle - 0.5), y + dy - 10 * Math.sin(angle - 0.5));
-        ctx.lineTo(x + dx - 10 * Math.cos(angle + 0.5), y + dy - 10 * Math.sin(angle + 0.5));
-        ctx.closePath();
-        ctx.fill();
-        ctx.font = "bold 11px Inter";
-        ctx.fillText(label, x + dx + 5, y + dy);
-    }
+    function draw() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    function drawScene(rad, offset, Wx, Wy, N, fr) {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        const w = canvas.width, h = canvas.height;
-        ctx.clearRect(0,0,w,h);
-        
         // Suelo
-        ctx.fillStyle = "#94a3b8";
-        ctx.fillRect(0, h-40, w, 40);
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
 
-        ctx.save();
-        ctx.translate(50, h-40);
-        ctx.rotate(-rad);
-        
-        // Superficie del plano
-        ctx.strokeStyle = COLORS.dark;
-        ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w*1.5,0); ctx.stroke();
+        // Dibujar elementos
+        [[ballIdeal, 250], [ballDrag, 550]].forEach(([ball, x]) => {
+            // Sombra proyectada
+            const shadowSize = Math.max(5, 15 - (floorY - ball.y)/20);
+            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            ctx.beginPath();
+            ctx.ellipse(x, floorY, shadowSize, 5, 0, 0, Math.PI*2);
+            ctx.fill();
 
-        // Bloque
-        const bw = 60, bh = 30;
-        ctx.fillStyle = COLORS.primary;
-        ctx.fillRect(offset, -bh, bw, bh);
-        ctx.strokeRect(offset, -bh, bw, bh);
+            // Pelota
+            ctx.beginPath();
+            ctx.arc(x, ball.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.stroke();
 
-        // Vectores
-        const cx = offset + bw/2, cy = -bh/2;
-        const s = 1.2; 
-        drawVector(cx, cy, 0, -N*s, COLORS.success, "N");      
-        drawVector(cx, cy, 0, Wy*s, COLORS.secondary, "Wy"); 
-        drawVector(cx, cy, Wx*s, 0, COLORS.danger, "Wx"); 
-        drawVector(cx, cy, -fr*s, 0, COLORS.blue, "fr");    
-
-        ctx.restore();
-    }
-
-    function startSim() {
-        cancelAnimationFrame(animationId);
-        pos = 0;
-        vel = 0;
-        
-        function animate() {
-            const accel = update();
-            if (pos < canvas.width - 150 && accel > 0) {
-                vel += accel * 0.05; 
-                pos += vel;
-                animationId = requestAnimationFrame(animate);
-            }
-        }
-        animate();
-    }
-
-    function updateEnergyChart(m, v, p, rad) {
-        const ctxE = document.getElementById('energyChart').getContext('2d');
-        const Ec = 0.5 * m * v * v;
-        const Ep = Math.max(0, m * 9.81 * (300 - p * Math.sin(rad)) / 10);
-
-        if(energyChart) energyChart.destroy();
-        energyChart = new Chart(ctxE, {
-            type: 'doughnut',
-            data: {
-                labels: ['E. Potencial', 'E. Cinética'],
-                datasets: [{
-                    data: [Ep.toFixed(1), Ec.toFixed(1)],
-                    backgroundColor: [COLORS.blue, COLORS.primary],
-                    borderWidth: 0
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                animation: false,
-                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } 
-            }
+            // Datos
+            ctx.fillStyle = "#1e293b";
+            ctx.font = "bold 13px Inter";
+            ctx.textAlign = "center";
+            ctx.fillText(ball.label, x, ball.y - 25);
+            ctx.fillStyle = "#64748b";
+            ctx.font = "11px 'Fira Code'";
+            ctx.fillText(`v: ${Math.abs(ball.vy).toFixed(2)} px/f`, x, ball.y + 35);
         });
     }
 
-    window.onload = update;
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    resetSim();
+    loop();
 </script>
 </body>
 </html>
