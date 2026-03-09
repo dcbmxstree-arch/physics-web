@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conducción en Serie | PHYSICS Thermal Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #ef4444; --blue: #3b82f6; --bg: #f8fafc; --dark: #0f172a; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { max-width: 900px; text-align: center; margin-bottom: 20px; }
+        .header h1 { font-weight: 900; margin: 0; font-size: 2rem; }
+        .header p { color: #64748b; font-size: 0.9rem; }
+
+        .main-container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 900px; }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        
+        canvas { display: block; margin: 0 auto; border-radius: 8px; max-width: 100%; }
+        
+        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; }
+        .control-section { border: 1px solid var(--border); padding: 12px; border-radius: 8px; background: #fafafa; }
+        .control-section h4 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: #64748b; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        label { font-size: 0.75rem; font-weight: 700; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        .val-display { font-family: 'Fira Code', monospace; font-size: 0.8rem; color: var(--primary); font-weight: bold; }
+
+        .results-bar { display: flex; justify-content: space-around; background: var(--dark); color: white; padding: 15px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin-top: 10px; }
+        .results-bar span { border-right: 1px solid #334155; padding-right: 15px; }
+        .results-bar span:last-child { border: none; }
+
+        .btn-reset { background: var(--dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; align-self: center; margin-top: 10px; }
+        .btn-reset:hover { background: #1e293b; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PHYSICS <span style="color: var(--primary);">THERMAL ANALYZER</span></h1>
+        <p>Simulación de conducción de calor en estado estable a través de paredes planas compuestas. Analiza el flujo de calor ($q$) y los gradientes térmicos.</p>
+    </div>
+
+    <div class="main-container">
+        <div class="card">
+            <canvas id="gradCanvas" width="800" height="250"></canvas>
+            <div class="results-bar">
+                <div>q = <span id="resQ">--</span> W/m²</div>
+                <div>T₁ = <span id="resT1">--</span> °C</div>
+                <div>T₂ = <span id="resT2">--</span> °C</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h4 style="margin: 0 0 10px 0; font-size: 0.8rem; color: #64748b;">PERFIL DE TEMPERATURA T(x)</h4>
+            <canvas id="plotCanvas" width="800" height="150"></canvas>
+        </div>
+
+        <div class="card">
+            <div class="controls-grid">
+                <div class="control-section">
+                    <h4>Temperaturas Externas</h4>
+                    <div class="input-group">
+                        <label>T Izquierda (T<sub>L</sub>): <span class="val-display" id="vTL">100</span>°C</label>
+                        <input type="range" id="tLeft" min="0" max="100" value="100">
+                    </div>
+                    <div class="input-group">
+                        <label>T Derecha (T<sub>R</sub>): <span class="val-display" id="vTR">20</span>°C</label>
+                        <input type="range" id="tRight" min="0" max="100" value="20">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h4 style="color: #6366f1;">Pared 1 (Material A)</h4>
+                    <div class="input-group">
+                        <label>k₁: <span class="val-display" id="vk1">1.0</span></label>
+                        <input type="range" id="k1" min="0.1" max="10" step="0.1" value="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Espesor L₁: <span class="val-display" id="vl1">1.0</span></label>
+                        <input type="range" id="l1" min="0.1" max="5" step="0.1" value="1">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h4 style="color: #10b981;">Pared 2 (Material B)</h4>
+                    <div class="input-group">
+                        <label>k₂: <span class="val-display" id="vk2">2.0</span></label>
+                        <input type="range" id="k2" min="0.1" max="10" step="0.1" value="2">
+                    </div>
+                    <div class="input-group">
+                        <label>Espesor L₂: <span class="val-display" id="vl2">1.0</span></label>
+                        <input type="range" id="l2" min="0.1" max="5" step="0.1" value="1">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h4 style="color: #f59e0b;">Pared 3 (Material C)</h4>
+                    <div class="input-group">
+                        <label>k₃: <span class="val-display" id="vk3">1.0</span></label>
+                        <input type="range" id="k3" min="0.1" max="10" step="0.1" value="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Espesor L₃: <span class="val-display" id="vl3">1.0</span></label>
+                        <input type="range" id="l3" min="0.1" max="5" step="0.1" value="1">
+                    </div>
+                </div>
+            </div>
+            <center><button class="btn-reset" onclick="resetDefaults()">RESTABLECER VALORES</button></center>
+        </div>
+    </div>
+
+<script>
+    const gradCanvas = document.getElementById('gradCanvas');
+    const plotCanvas = document.getElementById('plotCanvas');
+    const gCtx = gradCanvas.getContext('2d');
+    const pCtx = plotCanvas.getContext('2d');
+
+    const inputs = ['tLeft', 'tRight', 'k1', 'l1', 'k2', 'l2', 'k3', 'l3'];
+
+    // Función para interpolar colores (Azul a Rojo)
+    function getTempColor(temp, minT, maxT) {
+        const ratio = (temp - minT) / (maxT - minT || 1);
+        const r = Math.floor(255 * ratio);
+        const b = Math.floor(255 * (1 - ratio));
+        return `rgb(${r}, 50, ${b})`;
+    }
+
+    function calculate() {
+        // Obtener valores
+        const TL = parseFloat(document.getElementById('tLeft').value);
+        const TR = parseFloat(document.getElementById('tRight').value);
+        const k1 = parseFloat(document.getElementById('k1').value);
+        const l1 = parseFloat(document.getElementById('l1').value);
+        const k2 = parseFloat(document.getElementById('k2').value);
+        const l2 = parseFloat(document.getElementById('l2').value);
+        const k3 = parseFloat(document.getElementById('k3').value);
+        const l3 = parseFloat(document.getElementById('l3').value);
+
+        // Actualizar displays
+        inputs.forEach(id => document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).innerText = document.getElementById(id).value);
+
+        // Analogía de resistencias térmicas
+        const R1 = l1 / k1;
+        const R2 = l2 / k2;
+        const R3 = l3 / k3;
+        const Rtot = R1 + R2 + R3;
+        
+        const q = (TL - TR) / Rtot;
+        const T1 = TL - q * R1;
+        const T2 = T1 - q * R2;
+
+        // Actualizar UI resultados
+        document.getElementById('resQ').innerText = q.toFixed(2);
+        document.getElementById('resT1').innerText = T1.toFixed(2);
+        document.getElementById('resT2').innerText = T2.toFixed(2);
+
+        drawGradients(TL, T1, T2, TR);
+        drawPlot(TL, T1, T2, TR, l1, l2, l3);
+    }
+
+    function drawGradients(TL, T1, T2, TR) {
+        gCtx.clearRect(0, 0, gradCanvas.width, gradCanvas.height);
+        const pad = 100;
+        const wallW = 200;
+        const h = 150;
+        const y = 40;
+
+        const temps = [TL, T1, T2, TR];
+        const minT = Math.min(TL, TR);
+        const maxT = Math.max(TL, TR);
+
+        for (let i = 0; i < 3; i++) {
+            const x = pad + (i * wallW);
+            const grad = gCtx.createLinearGradient(x, 0, x + wallW, 0);
+            grad.addColorStop(0, getTempColor(temps[i], minT, maxT));
+            grad.addColorStop(1, getTempColor(temps[i+1], minT, maxT));
+
+            gCtx.fillStyle = grad;
+            gCtx.fillRect(x, y, wallW, h);
+            gCtx.strokeStyle = "#0f172a";
+            gCtx.lineWidth = 2;
+            gCtx.strokeRect(x, y, wallW, h);
+            
+            // Etiquetas
+            gCtx.fillStyle = "#64748b";
+            gCtx.font = "bold 12px Inter";
+            gCtx.fillText(`PARED ${i+1}`, x + 70, y - 10);
+            gCtx.fillStyle = "#1e293b";
+            gCtx.fillText(`${temps[i].toFixed(1)}°C`, x - 20, y + h + 25);
+        }
+        gCtx.fillText(`${TR.toFixed(1)}°C`, pad + 600 - 20, y + h + 25);
+    }
+
+    function drawPlot(TL, T1, T2, TR, l1, l2, l3) {
+        pCtx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+        const margin = 50;
+        const w = 700;
+        const h = 100;
+
+        const Ltot = l1 + l2 + l3;
+        const maxT = Math.max(TL, TR) * 1.1;
+        
+        const points = [
+            { x: 0, t: TL },
+            { x: l1, t: T1 },
+            { x: l1 + l2, t: T2 },
+            { x: Ltot, t: TR }
+        ];
+
+        function mapX(xVal) { return margin + (xVal / Ltot) * w; }
+        function mapY(tVal) { return (margin + h) - (tVal / maxT) * h; }
+
+        // Ejes
+        pCtx.strokeStyle = "#e2e8f0";
+        pCtx.beginPath();
+        pCtx.moveTo(margin, 20); pCtx.lineTo(margin, margin+h);
+        pCtx.lineTo(margin+w, margin+h);
+        pCtx.stroke();
+
+        // Línea de temperatura
+        pCtx.strokeStyle = var(--primary);
+        pCtx.lineWidth = 3;
+        pCtx.beginPath();
+        pCtx.moveTo(mapX(points[0].x), mapY(points[0].t));
+        
+        points.forEach((p, i) => {
+            const px = mapX(p.x);
+            const py = mapY(p.t);
+            pCtx.lineTo(px, py);
+            
+            // Puntos
+            pCtx.fillStyle = var(--primary);
+            pCtx.beginPath();
+            pCtx.arc(px, py, 5, 0, Math.PI*2);
+            pCtx.fill();
+        });
+        pCtx.stroke();
+    }
+
+    function resetDefaults() {
+        document.getElementById('tLeft').value = 100;
+        document.getElementById('tRight').value = 20;
+        document.getElementById('k1').value = 1; document.getElementById('l1').value = 1;
+        document.getElementById('k2').value = 2; document.getElementById('l2').value = 1;
+        document.getElementById('k3').value = 1; document.getElementById('l3').value = 1;
+        calculate();
+    }
+
+    // Event Listeners
+    inputs.forEach(id => document.getElementById(id).addEventListener('input', calculate));
+    
+    window.onload = calculate;
+</script>
+</body>
+</html>
