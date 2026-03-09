@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo Otto Ideal | PHYSICS Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --accent: #ef4444; --bg: #f8fafc; --dark: #0f172a; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-weight: 900; margin: 0; font-size: 2rem; }
+        .container { display: grid; grid-template-columns: 1fr 350px; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .canvas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        canvas { background: #fff; border: 1px solid #eee; border-radius: 8px; width: 100%; height: auto; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+        label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        input[type="range"] { accent-color: var(--primary); }
+        .val-tag { font-family: 'Fira Code', monospace; color: var(--primary); font-weight: bold; font-size: 0.85rem; }
+        .results-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 15px; }
+        .results-table th, .results-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
+        .results-table th { background: #f1f5f9; }
+        .innov-panel { background: #1e293b; color: #f8fafc; }
+        .warning { background: #7f1d1d; color: #fecaca; padding: 10px; border-radius: 6px; font-weight: bold; display: none; margin-top: 10px; font-size: 0.8rem; }
+        .btn-reset { background: var(--dark); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
+        select { padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PHYSICS <span style="color: var(--primary);">OTTO CYCLE</span> EXPLORER</h1>
+        <p>Análisis Termodinámico de Motores de Combustión Interna</p>
+    </div>
+
+    <div class="container">
+        <main>
+            <div class="card canvas-grid">
+                <div><canvas id="pvCanvas" width="400" height="300"></canvas></div>
+                <div><canvas id="tsCanvas" width="400" height="300"></canvas></div>
+            </div>
+
+            <div class="card">
+                <div class="controls">
+                    <div class="input-group">
+                        <label>Rel. Compresión (r): <span id="vr" class="val-tag">9</span></label>
+                        <input type="range" id="r" min="5" max="15" step="0.1" value="9">
+                        <label>T1 (K): <span id="vT1" class="val-tag">330</span></label>
+                        <input type="range" id="t1" min="300" max="400" step="1" value="330">
+                        <label>P1 (kPa): <span id="vP1" class="val-tag">100</span></label>
+                        <input type="range" id="p1" min="80" max="120" step="1" value="100">
+                    </div>
+                    <div class="input-group">
+                        <label>γ (Ratio Calores): <span id="vGamma" class="val-tag">1.4</span></label>
+                        <input type="range" id="gamma" min="1.2" max="1.67" step="0.01" value="1.4">
+                        <label>Qin (kJ/kg): <span id="vQin" class="val-tag">1500</span></label>
+                        <input type="range" id="qin" min="500" max="3000" step="50" value="1500">
+                        <button class="btn-reset" onclick="resetDefaults()">Restablecer</button>
+                    </div>
+                </div>
+
+                <table class="results-table" id="resTable">
+                    <thead><tr><th>Estado</th><th>P (kPa)</th><th>T (K)</th><th>v (m³/kg)</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </main>
+
+        <aside>
+            <div class="card innov-panel">
+                <h3 style="margin-top:0">Combustibles Alternativos</h3>
+                <div class="input-group">
+                    <label style="color: #94a3b8">Tipo de Combustible</label>
+                    <select id="fuelSelect" onchange="updateFuel()">
+                        <option value="1.4">Gasolina (γ=1.40)</option>
+                        <option value="1.41">Hidrógeno (γ=1.41)</option>
+                        <option value="1.3">Metano (γ=1.30)</option>
+                    </select>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #334155; margin: 15px 0;">
+                <p style="font-size: 0.8rem; line-height: 1.4;">Eficiencia Térmica: <span id="eff" style="color:#fbbf24; font-weight:bold">0%</span></p>
+                <p style="font-size: 0.8rem; line-height: 1.4;">Trabajo Neto: <span id="wnet" style="color:#fbbf24; font-weight:bold">0</span> kJ/kg</p>
+                <div id="lspiWarn" class="warning">⚠️ RIESGO DE DETONACIÓN / LSPI ALTO</div>
+                <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 15px;">
+                    En motores reales, el LSPI ocurre antes de la chispa debido a altas presiones y T en la cámara, limitando el downsizing y el uso de combustibles bajos en carbono.
+                </p>
+            </div>
+        </aside>
+    </div>
+
+<script>
+    const pvCanvas = document.getElementById('pvCanvas');
+    const tsCanvas = document.getElementById('tsCanvas');
+    const pvCtx = pvCanvas.getContext('2d');
+    const tsCtx = tsCanvas.getContext('2d');
+    const R = 0.287; // kJ/kg·K
+
+    function updateFuel() {
+        document.getElementById('gamma').value = document.getElementById('fuelSelect').value;
+        calculate();
+    }
+
+    function calculate() {
+        const r = parseFloat(document.getElementById('r').value);
+        const T1 = parseFloat(document.getElementById('t1').value);
+        const P1 = parseFloat(document.getElementById('p1').value);
+        const gamma = parseFloat(document.getElementById('gamma').value);
+        const Qin = parseFloat(document.getElementById('qin').value);
+        
+        document.getElementById('vr').innerText = r;
+        document.getElementById('vT1').innerText = T1;
+        document.getElementById('vP1').innerText = P1;
+        document.getElementById('vGamma').innerText = gamma;
+        document.getElementById('vQin').innerText = Qin;
+
+        const cv = R / (gamma - 1);
+        const v1 = (R * T1) / P1;
+        
+        // Estados
+        const v2 = v1 / r;
+        const T2 = T1 * Math.pow(r, gamma - 1);
+        const P2 = P1 * Math.pow(r, gamma);
+        
+        const v3 = v2;
+        const T3 = T2 + Qin / cv;
+        const P3 = P2 * (T3 / T2);
+        
+        const v4 = v1;
+        const T4 = T3 * Math.pow(1 / r, gamma - 1);
+        const P4 = P3 * Math.pow(1 / r, gamma);
+
+        const eff = 1 - (1 / Math.pow(r, gamma - 1));
+        const Qout = cv * (T4 - T1);
+        const wnet = Qin - Qout;
+
+        // UI
+        document.getElementById('eff').innerText = (eff * 100).toFixed(1) + "% (" + eff.toFixed(3) + ")";
+        document.getElementById('wnet').innerText = wnet.toFixed(2);
+        document.getElementById('lspiWarn').style.display = (T3 > 2800 || r > 12) ? 'block' : 'none';
+
+        const states = [
+            {id: 1, p: P1, t: T1, v: v1},
+            {id: 2, p: P2, t: T2, v: v2},
+            {id: 3, p: P3, t: T3, v: v3},
+            {id: 4, p: P4, t: T4, v: v4}
+        ];
+
+        let html = "";
+        states.forEach(s => {
+            html += `<tr><td>${s.id}</td><td>${s.p.toFixed(1)}</td><td>${s.t.toFixed(1)}</td><td>${s.v.toFixed(4)}</td></tr>`;
+        });
+        document.querySelector("#resTable tbody").innerHTML = html;
+
+        drawPV(states, r, gamma);
+        drawTS(states, cv);
+    }
+
+    function drawPV(states, r, gamma) {
+        pvCtx.clearRect(0,0,400,300);
+        const pad = 40;
+        const maxV = states[0].v * 1.1;
+        const maxP = states[2].p * 1.1;
+        
+        const mX = (v) => pad + (v / maxV) * (360 - pad);
+        const mY = (p) => 260 - (p / maxP) * (260 - 20);
+
+        // Grid y Ejes
+        pvCtx.strokeStyle = "#eee"; pvCtx.beginPath();
+        for(let i=1; i<5; i++) { pvCtx.moveTo(pad, 260-i*50); pvCtx.lineTo(380, 260-i*50); }
+        pvCtx.stroke();
+
+        // 1-2 Compresión (Azul)
+        pvCtx.strokeStyle = "#2563eb"; pvCtx.lineWidth = 2; pvCtx.beginPath();
+        for(let i=0; i<=20; i++) {
+            let v = states[0].v - (i/20)*(states[0].v - states[1].v);
+            let p = states[0].p * Math.pow(states[0].v / v, gamma);
+            pvCtx.lineTo(mX(v), mY(p));
+        }
+        pvCtx.stroke();
+
+        // 2-3 Calor In (Rojo)
+        pvCtx.strokeStyle = "#ef4444"; pvCtx.beginPath();
+        pvCtx.moveTo(mX(states[1].v), mY(states[1].p)); pvCtx.lineTo(mX(states[2].v), mY(states[2].p));
+        pvCtx.stroke();
+
+        // 3-4 Expansión (Verde)
+        pvCtx.strokeStyle = "#22c55e"; pvCtx.beginPath();
+        for(let i=0; i<=20; i++) {
+            let v = states[2].v + (i/20)*(states[3].v - states[2].v);
+            let p = states[2].p * Math.pow(states[2].v / v, gamma);
+            pvCtx.lineTo(mX(v), mY(p));
+        }
+        pvCtx.stroke();
+
+        // 4-1 Calor Out (Naranja)
+        pvCtx.strokeStyle = "#f97316"; pvCtx.beginPath();
+        pvCtx.moveTo(mX(states[3].v), mY(states[3].p)); pvCtx.lineTo(mX(states[0].v), mY(states[0].p));
+        pvCtx.stroke();
+
+        states.forEach(s => {
+            pvCtx.fillStyle = "#000"; pvCtx.beginPath(); pvCtx.arc(mX(s.v), mY(s.p), 4, 0, 7); pvCtx.fill();
+            pvCtx.fillText(s.id, mX(s.v)+5, mY(s.p)-5);
+        });
+        pvCtx.fillText("P [kPa]", 10, 20); pvCtx.fillText("v [m³/kg]", 340, 280);
+    }
+
+    function drawTS(states, cv) {
+        tsCtx.clearRect(0,0,400,300);
+        const pad = 50;
+        const maxT = states[2].t * 1.1;
+        const s1 = 0; 
+        const s2 = s1; // Isentrópica
+        const s3 = s2 + cv * Math.log(states[2].t / states[1].t);
+        const s4 = s3; // Isentrópica
+        const maxS = s3 * 1.2;
+
+        const mX = (s) => pad + (s / maxS) * (340 - pad);
+        const mY = (t) => 260 - (t / maxT) * (260 - 20);
+
+        // 1-2 Isentrópica
+        tsCtx.strokeStyle = "#2563eb"; tsCtx.beginPath();
+        tsCtx.moveTo(mX(s1), mY(states[0].t)); tsCtx.lineTo(mX(s2), mY(states[1].t)); tsCtx.stroke();
+
+        // 2-3 Isocora
+        tsCtx.strokeStyle = "#ef4444"; tsCtx.beginPath();
+        for(let i=0; i<=20; i++) {
+            let t = states[1].t + (i/20)*(states[2].t - states[1].t);
+            let s = s2 + cv * Math.log(t / states[1].t);
+            tsCtx.lineTo(mX(s), mY(t));
+        }
+        tsCtx.stroke();
+
+        // 3-4 Isentrópica
+        tsCtx.strokeStyle = "#22c55e"; tsCtx.beginPath();
+        tsCtx.moveTo(mX(s3), mY(states[2].t)); tsCtx.lineTo(mX(s4), mY(states[3].t)); tsCtx.stroke();
+
+        // 4-1 Isocora
+        tsCtx.strokeStyle = "#f97316"; tsCtx.beginPath();
+        for(let i=0; i<=20; i++) {
+            let t = states[3].t - (i/20)*(states[3].t - states[0].t);
+            let s = s4 - cv * Math.log(states[3].t / t);
+            tsCtx.lineTo(mX(s), mY(t));
+        }
+        tsCtx.stroke();
+
+        const tsStates = [
+            {id:1, s: s1, t: states[0].t}, {id:2, s: s2, t: states[1].t},
+            {id:3, s: s3, t: states[2].t}, {id:4, s: s4, t: states[3].t}
+        ];
+        tsStates.forEach(s => {
+            tsCtx.fillStyle = "#000"; tsCtx.beginPath(); tsCtx.arc(mX(s.s), mY(s.t), 4, 0, 7); tsCtx.fill();
+            tsCtx.fillText(s.id, mX(s.s)+5, mY(s.t)-5);
+        });
+        tsCtx.fillText("T [K]", 10, 20); tsCtx.fillText("s [kJ/kgK]", 330, 280);
+    }
+
+    function resetDefaults() {
+        document.getElementById('r').value = 9;
+        document.getElementById('t1').value = 330;
+        document.getElementById('p1').value = 100;
+        document.getElementById('gamma').value = 1.4;
+        document.getElementById('qin').value = 1500;
+        document.getElementById('fuelSelect').value = "1.4";
+        calculate();
+    }
+
+    document.querySelectorAll('input').forEach(i => i.addEventListener('input', calculate));
+    window.onload = calculate;
+</script>
+</body>
+</html>
