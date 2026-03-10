@@ -23,6 +23,13 @@ html { scroll-behavior: smooth; }
 .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 .grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 
+/* METODOLOGÍA: 4 columnas desktop → 2 tablet → 1 móvil */
+.metodologia-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
 /* HEADER */
 .header { background: rgba(255,255,255,0.98); position: fixed; width: 100%; top: 0; z-index: 1000; border-bottom: 1px solid #eee; }
 .header-container { display: flex; justify-content: space-between; align-items: center; height: 75px; }
@@ -102,11 +109,55 @@ html { scroll-behavior: smooth; }
 .section-subtitle { text-align: center; max-width: 700px; margin: 0 auto 3.5rem; color: var(--text-muted); font-size: 1.1rem; }
 
 /* CARDS */
-.feature-card, .course-card { background: var(--white); padding: 2.5rem; border-radius: 12px; border: 1px solid #eef0f2; transition: var(--transition); text-align: center; }
+.feature-card, .course-card { background: var(--white); padding: 2rem; border-radius: 12px; border: 1px solid #eef0f2; transition: var(--transition); text-align: center; position: relative; }
 .feature-card:hover, .course-card:hover { border-color: var(--electric-blue); transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-.icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+.feature-card h3 { color: var(--dark-blue); margin-bottom: 0.75rem; font-size: 1.05rem; font-weight: 700; }
+.feature-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+.icon { font-size: 2.2rem; margin-bottom: 1rem; display: block; }
 .course-card h3 { color: var(--dark-blue); margin-bottom: 0.5rem; font-size: 1.2rem; }
 .course-card p { font-size: 0.9rem; color: var(--text-muted); }
+
+/* Card destacada (Herramientas Digitales) */
+.featured-card {
+    border: 2px solid var(--electric-blue);
+    box-shadow: 0 4px 20px rgba(37,99,235,0.1);
+}
+
+/* Card exclusivo (Diagnóstico Personalizado) */
+.exclusivo-card {
+    border-top: 3px solid var(--electric-blue);
+}
+.exclusivo-badge {
+    position: absolute;
+    top: -1px;
+    right: 16px;
+    background: var(--electric-blue);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 0 0 6px 6px;
+}
+
+/* Etiqueta de sección "¿POR QUÉ PHYSICS?" */
+.section-label {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--electric-blue);
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 20px;
+    display: inline-block;
+    padding: 4px 16px;
+    margin-bottom: 1rem;
+    /* Centrar el bloque inline */
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
 
 /* FORMULARIO */
 .contact-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
@@ -128,12 +179,53 @@ html { scroll-behavior: smooth; }
 .delay-2 { animation-delay: 0.4s; opacity: 0; }
 
 /* RESPONSIVE */
+
+/* Tablet: 2 columnas para metodología */
+@media (max-width: 1024px) {
+    .metodologia-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Móvil: 1 columna para todo */
+@media (max-width: 640px) {
+    .metodologia-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    /* Cards más compactas en móvil */
+    .feature-card {
+        padding: 1.5rem;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .feature-card .icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.6rem;
+    }
+    .feature-card h3 {
+        font-size: 1rem;
+    }
+    /* Badge exclusivo reposicionado */
+    .exclusivo-badge {
+        right: 12px;
+        font-size: 0.6rem;
+        padding: 2px 8px;
+    }
+    /* Etiqueta de sección más pequeña */
+    .section-label {
+        font-size: 0.7rem;
+        padding: 3px 12px;
+    }
+}
+
 @media (max-width: 900px) {
     .contact-container { grid-template-columns: 1fr; gap: 2rem; }
     .hero h1 { font-size: 2.5rem; }
-    .hero-buttons { flex-direction: column; }
+    .hero-buttons { flex-direction: column; align-items: center; }
     .nav-menu { display: none; }
-
 }
 
 
